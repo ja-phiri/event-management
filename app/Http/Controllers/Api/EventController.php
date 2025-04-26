@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller; // Use the correct base Controller class
 use App\Http\Resources\EventResource;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Event;
@@ -10,24 +10,30 @@ use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
-    use CanLoadRelationships; 
-    
-    private  $relations = ['user','attendees','attendees.user'];
+    use CanLoadRelationships;
+
+    private $relations = ['user', 'attendees', 'attendees.user'];
+
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except(['index', 'show']);
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        
-        $query = $this->loadRelationships(Event::query()); ; 
-        
-        
+
+        $query = $this->loadRelationships(Event::query());
+        ;
+
+
         return EventResource::collection(
             $query->latest()->paginate()
         );
     }
 
-    
+
     /**
      * Store a newly created resource in storage.
      */
@@ -42,7 +48,7 @@ class EventController extends Controller
 
         $event = Event::create([
             ...$validated,
-            'user_id' => 1
+            'user_id' => $request->user()->id
         ]);
         return new EventResource($this->loadRelationships($event));
     }
